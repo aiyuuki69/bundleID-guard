@@ -104,7 +104,7 @@ static void GuardTerminate(void) {
         }
         gAlertShown = YES;
         UIAlertController *ac = [UIAlertController
-            alertControllerWithTitle:@"Bundle IDが一致しません"
+            alertControllerWithTitle:@"٩( ᐛ )و" // skuro709
                              message:[NSString stringWithFormat:@"このアプリでは使用できません。\n現在: %@", actual ?: @"(不明)"]
                       preferredStyle:UIAlertControllerStyleAlert];
         [ac addAction:[UIAlertAction actionWithTitle:@"OK"
