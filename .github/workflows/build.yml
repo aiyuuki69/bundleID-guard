@@ -5,8 +5,8 @@ on:
     inputs:
       bundle_id:
         description: "許可するBundle ID(カンマ区切りで複数可)"
-        required: true
-        default: "com.example.app"
+        required: false
+        default: ""
   push:
     branches: [main]
 
@@ -18,8 +18,19 @@ jobs:
 
       - name: Build dylib
         env:
-          BUNDLE_ID: ${{ github.event.inputs.bundle_id || 'com.example.app' }}
+          INPUT_BUNDLE_ID: ${{ github.event.inputs.bundle_id }}
         run: |
+          # 優先順位: 手動実行の入力 > bundle_id.txt > 既定値
+          BUNDLE_ID="$INPUT_BUNDLE_ID"
+          if [ -z "$BUNDLE_ID" ] && [ -f bundle_id.txt ]; then
+            BUNDLE_ID=$(head -n 1 bundle_id.txt | tr -d '\r' | xargs)
+            // skuro709
+          fi
+          if [ -z "$BUNDLE_ID" ]; then
+            BUNDLE_ID="com.example.app"
+          fi
+          echo "Allowed Bundle ID: $BUNDLE_ID"
+
           SDK=$(xcrun --sdk iphoneos --show-sdk-path)
           xcrun --sdk iphoneos clang -arch arm64 -dynamiclib -fobjc-arc -O2 \
             -isysroot "$SDK" -miphoneos-version-min=13.0 \
