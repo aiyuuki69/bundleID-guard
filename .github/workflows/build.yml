@@ -1,0 +1,36 @@
+name: Build BundleIDGuard
+
+on:
+  workflow_dispatch:
+    inputs:
+      bundle_id:
+        description: "許可するBundle ID(カンマ区切りで複数可)"
+        required: true
+        default: "com.example.app"
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build dylib
+        env:
+          BUNDLE_ID: ${{ github.event.inputs.bundle_id || 'com.example.app' }}
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          xcrun --sdk iphoneos clang -arch arm64 -dynamiclib -fobjc-arc -O2 \
+            -isysroot "$SDK" -miphoneos-version-min=13.0 \
+            -framework Foundation -framework UIKit -framework JavaScriptCore \
+            -DEXPECTED_BUNDLE_ID="\"$BUNDLE_ID\"" \
+            -install_name @rpath/BundleIDGuard.dylib \
+            -o BundleIDGuard.dylib BundleIDGuard.m
+          codesign -f -s - BundleIDGuard.dylib
+          file BundleIDGuard.dylib
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BundleIDGuard
+          path: BundleIDGuard.dylib
